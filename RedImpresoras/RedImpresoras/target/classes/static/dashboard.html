@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Printer Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f0f2f5;
+        }
+        h1 {
+            color: #333;
+        }
+        table {
+            width: 100%;
+            margin-bottom: 20px;
+            border-collapse: collapse;
+            background: white;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ccc;
+        }
+        form {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        input, select, button {
+            padding: 10px;
+            margin: 5px;
+            width: calc(100% - 22px);
+        }
+    </style>
+</head>
+<body>
+<h1>Printer Queue Dashboard</h1>
+
+<h2>Queue</h2>
+<table id="queueTable">
+    <thead>
+    <tr>
+        <th>Document Name</th>
+        <th>Priority</th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<h2>Printers</h2>
+<table id="printerTable">
+    <thead>
+    <tr>
+        <th>Printer ID</th>
+        <th>Status</th>
+        <th>Document</th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+
+<h2>Send Document</h2>
+<form id="sendForm">
+    <input type="text" id="documentName" placeholder="Document Name" required><br>
+    <select id="priority" required>
+        <option value="High">High</option>
+        <option value="Medium">Medium</option>
+        <option value="Low">Low</option>
+    </select><br>
+    <select id="printerId" required>
+        <option value="Printer-1">Printer-1</option>
+        <option value="Printer-2">Printer-2</option>
+        <option value="Printer-3">Printer-3</option>
+    </select><br>
+    <button type="submit">Send to Queue</button>
+</form>
+
+<h2>Printed Documents</h2>
+<table id="printedTable">
+    <thead>
+    <tr>
+        <th>Document Name</th>
+        <th>Priority</th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+
+<script>
+    async function refreshData() {
+        const queueRes = await fetch('/api/queue');
+        const queue = await queueRes.json();
+        const printerRes = await fetch('/api/printers');
+        const printers = await printerRes.json();
+        const printedRes = await fetch('/api/printed');
+        const printed = await printedRes.json();
+
+        const queueTable = document.querySelector("#queueTable tbody");
+        queueTable.innerHTML = "";
+        queue.forEach(doc => {
+            queueTable.innerHTML += `<tr><td>${doc.name}</td><td>${doc.priority}</td></tr>`;
+        });
+
+        const printerTable = document.querySelector("#printerTable tbody");
+        printerTable.innerHTML = "";
+        printers.forEach(printer => {
+            printerTable.innerHTML += `
+        <tr>
+            <td>${printer.id}</td>
+            <td>${printer.status}</td>
+            <td>${printer.document === "Idle" ? "-" : printer.document}</td>
+        </tr>`;
+        });
+
+        const printedTable = document.querySelector("#printedTable tbody");
+        printedTable.innerHTML = "";
+        printed.forEach(doc => {
+            printedTable.innerHTML += `<tr><td>${doc.name}</td><td>${doc.priority}</td></tr>`;
+        });
+
+
+    }
+
+
+
+    document.getElementById("sendForm").addEventListener("submit", async function(e) {
+        e.preventDefault();
+        const documentName = document.getElementById("documentName").value;
+        const priority = document.getElementById("priority").value;
+        const printerId = document.getElementById("printerId").value;
+
+        await fetch(`/api/send?printerId=${printerId}&documentName=${documentName}&priority=${priority}`, {
+            method: "POST"
+        });
+
+        refreshData();
+    });
+
+    setInterval(refreshData, 1000);
+    refreshData();
+</script>
+</body>
+</html>
