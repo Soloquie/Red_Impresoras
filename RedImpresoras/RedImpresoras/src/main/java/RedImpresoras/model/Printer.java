@@ -26,8 +26,8 @@ public class Printer implements Runnable {
 
     public void assignDocument(Document doc) {
         synchronized (lock) {
-            documentQueue.offer(doc); // ENCOLAR documento
-            lock.notify(); // Despertar el hilo si estaba esperando
+            documentQueue.offer(doc); 
+            lock.notify(); 
         }
     }
 
@@ -54,13 +54,13 @@ public class Printer implements Runnable {
                     break;
                 }
 
-                currentDocument = documentQueue.poll(); // Tomar siguiente documento
+                currentDocument = documentQueue.poll(); 
             }
 
             if (currentDocument != null) {
                 System.out.println("[" + id + "] Printing: " + currentDocument);
                 try {
-                    Thread.sleep(8000); // Simula impresión de 8 segundos
+                    Thread.sleep(8000); 
                 } catch (InterruptedException e) {
                     break;
                 }

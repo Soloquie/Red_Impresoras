@@ -1,0 +1,103 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f6f8;
+    margin: 0;
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+    color: #2c3e50;
+    margin-bottom: 40px;
+    font-size: 36px;
+}
+
+h2 {
+    color: #34495e;
+    margin-top: 30px;
+}
+
+table {
+    width: 100%;
+    margin-top: 10px;
+    border-collapse: collapse;
+    background-color: white;
+    box-shadow: 0px 2px 8px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    background-color: #2c3e50;
+    color: white;
+}
+
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+form {
+    background-color: white;
+    padding: 20px;
+    margin-top: 20px;
+    box-shadow: 0px 2px 8px rgba(0,0,0,0.1);
+    border-radius: 8px;
+}
+
+input, select, button {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+}
+
+button {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #2980b9;
+}
+
+.status-idle td {
+background-color: #ecf0f1;
+color: #2c3e50;
+}
+
+.status-printing td {
+background-color: #2ecc71;
+color: white;
+}
+
+.badge {
+display: inline-block;
+width: 10px;
+height: 10px;
+border-radius: 50%;
+margin-right: 8px;
+}
+
+.badge-idle {
+background-color: #95a5a6;
+}
+
+.badge-printing {
+background-color: #27ae60;
+}
+
+.printing-document {
+color: #f39c12;
+font-weight: bold;
+}
