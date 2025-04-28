@@ -1,14 +1,28 @@
 package RedImpresoras.controllers;
 
-import RedImpresoras.model.PriorityQueue;
-import org.springframework.web.bind.annotation.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import RedImpresoras.model.*;
-import java.util.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import RedImpresoras.model.Dispatcher;
+import RedImpresoras.model.Document;
+import RedImpresoras.model.Node;
+import RedImpresoras.model.Printer;
+import RedImpresoras.model.Priority;
+import RedImpresoras.model.PriorityQueue;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "*") // para que el frontend pueda acceder
+@CrossOrigin(origins = "*") 
 public class PrintController {
 
     private final PriorityQueue<Document> printQueue;
@@ -36,7 +50,6 @@ public class PrintController {
         }
 
 
-        // Aquí pre-cargamos documentos
         this.printQueue.enqueue(new Document("Payroll", Priority.High));
         this.printQueue.enqueue(new Document("Internal Memo", Priority.Low));
         this.printQueue.enqueue(new Document("Client Report", Priority.Medium));
@@ -65,28 +78,38 @@ public class PrintController {
         return documents;
     }
 
-    @GetMapping("/printers")
-    public List<Map<String, String>> getPrinters() {
-        List<Map<String, String>> printerStatus = new ArrayList<>();
-        for (Printer printer : printers) {
-            Map<String, String> info = new HashMap<>();
-            info.put("id", printer.getId());
-            info.put("status", printer.isBusy() ? "Printing" : "Idle");
-            info.put("document", printer.getCurrentDocumentName());
-            printerStatus.add(info);
+@GetMapping("/printers")
+public List<Map<String, String>> getPrinters() {
+    List<Map<String, String>> printerStatus = new ArrayList<>();
+    for (Printer printer : printers) {
+        Map<String, String> info = new HashMap<>();
+        boolean busy = printer.isBusy();
+        info.put("id", printer.getId());
+        info.put("status", busy ? "Printing" : "Idle");
+        info.put("document", busy ? printer.getCurrentDocumentName() : "-");
+        printerStatus.add(info);
+    }
+    return printerStatus;
+}
+
+
+
+@PostMapping("/send")
+public String sendDocument(@RequestParam String printerId,
+                            @RequestParam String documentName,
+                            @RequestParam Priority priority) {
+    Document doc = new Document(documentName, priority);
+
+    for (Printer printer : printers) {
+        if (printer.getId().equals(printerId)) {
+            printer.assignDocument(doc);
+            break;
         }
-        return printerStatus;
     }
 
+    return "Document sent to printer.";
+}
 
-    @PostMapping("/send")
-    public String sendDocument(@RequestParam String printerId,
-                               @RequestParam String documentName,
-                               @RequestParam Priority priority) {
-        Document doc = new Document(documentName, priority);
-        printQueue.enqueue(doc);
-        return "Document added to print queue.";
-    }
 
     @GetMapping("/printed")
     public List<Map<String, String>> getPrinted() {

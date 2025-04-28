@@ -1,13 +1,16 @@
 package RedImpresoras.model;
 
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.function.Consumer;
 
 public class Printer implements Runnable {
     private final String id;
-    private Document assignedDocument;
-    private Consumer<Document> onDocumentPrinted;
+    private final Queue<Document> documentQueue = new LinkedList<>();
+    private Document currentDocument;
     private final Object lock = new Object();
     private boolean running = true;
+    private Consumer<Document> onDocumentPrinted;
 
     public Printer(String id) {
         this.id = id;
@@ -16,14 +19,15 @@ public class Printer implements Runnable {
     public String getId() {
         return id;
     }
+
     public void setOnDocumentPrinted(Consumer<Document> consumer) {
         this.onDocumentPrinted = consumer;
     }
 
     public void assignDocument(Document doc) {
         synchronized (lock) {
-            assignedDocument = doc;
-            lock.notify();
+            documentQueue.offer(doc); // ENCOLAR documento
+            lock.notify(); // Despertar el hilo si estaba esperando
         }
     }
 
@@ -38,7 +42,7 @@ public class Printer implements Runnable {
     public void run() {
         while (true) {
             synchronized (lock) {
-                while (assignedDocument == null && running) {
+                while (documentQueue.isEmpty() && running) {
                     try {
                         lock.wait();
                     } catch (InterruptedException e) {
@@ -46,19 +50,27 @@ public class Printer implements Runnable {
                     }
                 }
 
-                if (!running && assignedDocument == null) break;
+                if (!running && documentQueue.isEmpty()) {
+                    break;
+                }
 
-                if (assignedDocument != null) {
-                    System.out.println("[" + id + "] Printing: " + assignedDocument);
-                    try {
-                        Thread.sleep(2000);
-                    } catch (InterruptedException e) {
-                        break;
-                    }
-                    if (onDocumentPrinted != null) {
-                        onDocumentPrinted.accept(assignedDocument);
-                    }
-                    assignedDocument = null;
+                currentDocument = documentQueue.poll(); // Tomar siguiente documento
+            }
+
+            if (currentDocument != null) {
+                System.out.println("[" + id + "] Printing: " + currentDocument);
+                try {
+                    Thread.sleep(8000); // Simula impresión de 8 segundos
+                } catch (InterruptedException e) {
+                    break;
+                }
+
+                if (onDocumentPrinted != null) {
+                    onDocumentPrinted.accept(currentDocument);
+                }
+
+                synchronized (lock) {
+                    currentDocument = null;
                 }
             }
         }
@@ -68,19 +80,17 @@ public class Printer implements Runnable {
 
     public String getCurrentDocumentName() {
         synchronized (lock) {
-            if (assignedDocument == null) {
+            if (currentDocument == null) {
                 return "Idle";
             } else {
-                return "Printing: " + assignedDocument.getName();
+                return currentDocument.getName();
             }
         }
     }
 
     public boolean isBusy() {
         synchronized (lock) {
-            return assignedDocument != null;
+            return currentDocument != null;
         }
     }
-
-
 }

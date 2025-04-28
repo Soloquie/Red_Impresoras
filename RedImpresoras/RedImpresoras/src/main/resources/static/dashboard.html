@@ -2,94 +2,167 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Printer Dashboard</title>
+    <title>Centro de Impresión</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            margin: 40px;
-            background-color: #f0f2f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f8;
+            margin: 0;
+            padding: 20px;
         }
+
         h1 {
-            color: #333;
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 40px;
+            font-size: 36px;
         }
+
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+        }
+
         table {
             width: 100%;
-            margin-bottom: 20px;
+            margin-top: 10px;
             border-collapse: collapse;
-            background: white;
-        }
-        th, td {
-            padding: 10px;
-            text-align: left;
-            border-bottom: 1px solid #ccc;
-        }
-        form {
-            background: white;
-            padding: 20px;
+            background-color: white;
+            box-shadow: 0px 2px 8px rgba(0,0,0,0.1);
             border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #2c3e50;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        form {
+            background-color: white;
+            padding: 20px;
             margin-top: 20px;
+            box-shadow: 0px 2px 8px rgba(0,0,0,0.1);
+            border-radius: 8px;
         }
+
         input, select, button {
-            padding: 10px;
-            margin: 5px;
-            width: calc(100% - 22px);
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 16px;
         }
+
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .status-idle td {
+    background-color: #ecf0f1;
+    color: #2c3e50;
+}
+
+.status-printing td {
+    background-color: #2ecc71;
+    color: white;
+}
+
+.badge {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.badge-idle {
+    background-color: #95a5a6;
+}
+
+.badge-printing {
+    background-color: #27ae60;
+}
+
+.printing-document {
+    color: #f39c12;
+    font-weight: bold;
+}
+
     </style>
 </head>
 <body>
-<h1>Printer Queue Dashboard</h1>
 
-<h2>Queue</h2>
+<h1>Centro de Impresión</h1>
+
+<h2>Cola de Documentos</h2>
 <table id="queueTable">
     <thead>
     <tr>
-        <th>Document Name</th>
-        <th>Priority</th>
+        <th>Nombre del Documento</th>
+        <th>Prioridad</th>
     </tr>
     </thead>
     <tbody></tbody>
 </table>
 
-<h2>Printers</h2>
+<h2>Impresoras</h2>
 <table id="printerTable">
     <thead>
     <tr>
-        <th>Printer ID</th>
-        <th>Status</th>
-        <th>Document</th>
+        <th>Impresora</th>
+        <th>Estado</th>
+        <th>Documento</th>
     </tr>
     </thead>
     <tbody></tbody>
 </table>
 
-
-<h2>Send Document</h2>
+<h2>Enviar Documento</h2>
 <form id="sendForm">
-    <input type="text" id="documentName" placeholder="Document Name" required><br>
+    <input type="text" id="documentName" placeholder="Nombre del Documento" required>
     <select id="priority" required>
-        <option value="High">High</option>
-        <option value="Medium">Medium</option>
-        <option value="Low">Low</option>
-    </select><br>
+        <option value="High">Alta</option>
+        <option value="Medium">Media</option>
+        <option value="Low">Baja</option>
+    </select>
     <select id="printerId" required>
         <option value="Printer-1">Printer-1</option>
         <option value="Printer-2">Printer-2</option>
         <option value="Printer-3">Printer-3</option>
-    </select><br>
-    <button type="submit">Send to Queue</button>
+    </select>
+    <button type="submit">Enviar a la Cola</button>
 </form>
 
-<h2>Printed Documents</h2>
+<h2>Documentos Impresos</h2>
 <table id="printedTable">
     <thead>
     <tr>
-        <th>Document Name</th>
-        <th>Priority</th>
+        <th>Nombre del Documento</th>
+        <th>Prioridad</th>
     </tr>
     </thead>
     <tbody></tbody>
 </table>
-
 
 <script>
     async function refreshData() {
@@ -109,12 +182,16 @@
         const printerTable = document.querySelector("#printerTable tbody");
         printerTable.innerHTML = "";
         printers.forEach(printer => {
+            const rowClass = printer.status === "Printing" ? "status-printing" : "status-idle";
+            const badgeClass = printer.status === "Printing" ? "badge-printing" : "badge-idle";
+            const documentClass = printer.status === "Printing" ? "printing-document" : "";
+
             printerTable.innerHTML += `
-        <tr>
-            <td>${printer.id}</td>
-            <td>${printer.status}</td>
-            <td>${printer.document === "Idle" ? "-" : printer.document}</td>
-        </tr>`;
+                <tr class="${rowClass}">
+                    <td><span class="badge ${badgeClass}"></span>${printer.id}</td>
+                    <td>${printer.status}</td>
+                    <td class="${documentClass}">${printer.document}</td>
+                </tr>`;
         });
 
         const printedTable = document.querySelector("#printedTable tbody");
@@ -122,11 +199,7 @@
         printed.forEach(doc => {
             printedTable.innerHTML += `<tr><td>${doc.name}</td><td>${doc.priority}</td></tr>`;
         });
-
-
     }
-
-
 
     document.getElementById("sendForm").addEventListener("submit", async function(e) {
         e.preventDefault();
@@ -141,8 +214,9 @@
         refreshData();
     });
 
-    setInterval(refreshData, 1000);
+    setInterval(refreshData, 1000); 
     refreshData();
 </script>
+
 </body>
 </html>
